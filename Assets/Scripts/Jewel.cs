@@ -7,16 +7,17 @@ public class Jewel : MonoBehaviour
     [SerializeField] private int _id;
     [SerializeField] private int _column;
     [SerializeField] private int _row;
+
     [SerializeField] private SpriteRenderer _spriteRenderer;
 
-    private Transform goTransform;
-
-    private Vector3 startPos;
+    private Transform _goTransform;
 
     private float _deltaPos = 0.002f;
+
     private bool _isSelected = false;
-    private bool _countDown = false;
+    private bool _isAnimationUp = false;
     private bool _isAlterable = false;
+
     private int _counter;
 
     public delegate void OnJewelClick(bool _isSelected, int _column, int _row);
@@ -24,7 +25,7 @@ public class Jewel : MonoBehaviour
 
     private void Start()
     {
-        goTransform = gameObject.transform;
+        _goTransform = gameObject.transform;
     }
 
     public void SetJewelData(int id, Sprite sprite)
@@ -32,7 +33,7 @@ public class Jewel : MonoBehaviour
         _id = id;
         _spriteRenderer.sprite = sprite;
     }
-    public void SetJewelPosition(int row, int column)
+    public void SetJewelPositionOnGrid(int row, int column)
     {
         _row = row;
         _column = column;
@@ -57,7 +58,7 @@ public class Jewel : MonoBehaviour
     public void IsAlterable(bool isAlterable)
     {
         _isAlterable = isAlterable;
-        if (isAlterable == true) _spriteRenderer.sprite = null;
+        if (isAlterable) _spriteRenderer.sprite = null;
     }
 
     public bool IsAlterable() 
@@ -67,30 +68,34 @@ public class Jewel : MonoBehaviour
 
     private void SelectingAnimation() 
     {
-        _countDown = _counter < 6 ? false : true;
-        if (_countDown == false) _deltaPos = 0.002f; else _deltaPos = -0.002f;
-        goTransform.position += new Vector3(0, _deltaPos, 0);
+        _isAnimationUp = _counter < 6 ? true : false;
+        if (_isAnimationUp) _goTransform.position += new Vector3(0, _deltaPos, 0);
+        else _goTransform.position -= new Vector3(0, _deltaPos, 0);
         _counter++;
         if (_counter > 11) _counter = 0;
     }
 
+    public void SetJewelPosition() 
+    {
+        _goTransform.position = new Vector3(-0.81f + _column * 0.18f, 0.81f - _row * 0.18f, 0);
+    }
     public void StartFallingAnimation(int numOfJewels) 
     {
-        StartCoroutine(FallingAnimation(numOfJewels));
+        StartCoroutine(FallingAnimationCoroutine(numOfJewels));
     }
-    private IEnumerator FallingAnimation(int numOfJewels) 
+    private IEnumerator FallingAnimationCoroutine(int numOfJewels) 
     {
         for (int i = 0; i < numOfJewels * 6; i++) 
         {
-            goTransform.position -= new Vector3(0, 0.03f, 0); 
+            _goTransform.position -= new Vector3(0, 0.03f, 0); 
             yield return new WaitForSeconds(0.02f);
         }
-        goTransform.position = new Vector3(-0.81f + _column * 0.18f, 0.81f - _row * 0.18f, 0);
+        SetJewelPosition();
     }
 
     private IEnumerator SelectingAnimationCoroutine() 
     {
-        while(_isSelected == true || _counter > 0) 
+        while(_isSelected || _counter > 0) 
         {
             SelectingAnimation();
             yield return new WaitForSeconds(0.05f);
